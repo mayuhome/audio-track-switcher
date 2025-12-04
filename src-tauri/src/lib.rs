@@ -1,5 +1,5 @@
-use std::process::Command;
 use serde::{Deserialize, Serialize};
+use std::process::Command;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct AudioTrack {
@@ -30,37 +30,39 @@ fn get_go_backend_path() -> String {
         .ok()
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
         .unwrap_or_default();
-    
+
     #[cfg(target_os = "windows")]
     let backend_name = "audio-track-backend.exe";
     #[cfg(not(target_os = "windows"))]
     let backend_name = "audio-track-backend";
-    
+
     exe_dir.join(backend_name).to_string_lossy().to_string()
 }
 
 #[tauri::command]
 async fn get_audio_tracks(video_path: String) -> Result<VideoInfo, String> {
     let backend_path = get_go_backend_path();
-    
+
     let output = Command::new(&backend_path)
         .arg("get-tracks")
         .arg(&video_path)
         .output()
         .map_err(|e| format!("Failed to execute Go backend: {}", e))?;
-    
+
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
-    let response: GoResponse = serde_json::from_str(&stdout)
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
-    
+
+    let response: GoResponse =
+        serde_json::from_str(&stdout).map_err(|e| format!("Failed to parse response: {}", e))?;
+
     if !response.success {
-        return Err(response.message.unwrap_or_else(|| "Unknown error".to_string()));
+        return Err(response
+            .message
+            .unwrap_or_else(|| "Unknown error".to_string()));
     }
-    
+
     let video_info: VideoInfo = serde_json::from_value(response.data.unwrap())
         .map_err(|e| format!("Failed to parse video info: {}", e))?;
-    
+
     Ok(video_info)
 }
 
@@ -71,7 +73,7 @@ async fn switch_audio_track(
     output_path: String,
 ) -> Result<String, String> {
     let backend_path = get_go_backend_path();
-    
+
     let output = Command::new(&backend_path)
         .arg("switch-track")
         .arg(&input_path)
@@ -79,16 +81,18 @@ async fn switch_audio_track(
         .arg(&output_path)
         .output()
         .map_err(|e| format!("Failed to execute Go backend: {}", e))?;
-    
+
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
-    let response: GoResponse = serde_json::from_str(&stdout)
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
-    
+
+    let response: GoResponse =
+        serde_json::from_str(&stdout).map_err(|e| format!("Failed to parse response: {}", e))?;
+
     if !response.success {
-        return Err(response.message.unwrap_or_else(|| "Unknown error".to_string()));
+        return Err(response
+            .message
+            .unwrap_or_else(|| "Unknown error".to_string()));
     }
-    
+
     Ok(response.message.unwrap_or_else(|| "Success".to_string()))
 }
 
@@ -96,6 +100,7 @@ async fn switch_audio_track(
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             get_audio_tracks,
             switch_audio_track
