@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -89,12 +92,68 @@ func SwitchDefaultAudioTrack(inputPath string, trackIndex int, outputPath string
 		"-disposition:a", "0", // Remove default flag from all audio tracks
 		fmt.Sprintf("-disposition:a:%d", trackIndex), "default", // Set selected track as default
 		"-y", // Overwrite output file
+		"-progress", "pipe:1", // Output progress to stdout
 		outputPath,
 	)
 
-	output, err := cmd.CombinedOutput()
+	// Get stdout pipe to read progress
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return fmt.Errorf("ffmpeg error: %w\nOutput: %s", err, string(output))
+		return fmt.Errorf("failed to get stdout pipe: %w", err)
+	}
+
+	// Start the command
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start ffmpeg: %w", err)
+	}
+
+	// Create a scanner to read stdout line by line
+	scanner := bufio.NewScanner(stdout)
+	var progressMap = make(map[string]string)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			// Empty line means end of progress update
+			if progressMap["out_time_ms"] != "" && progressMap["duration"] != "" {
+				// Parse progress
+				outTimeMs, _ := strconv.ParseFloat(progressMap["out_time_ms"], 64)
+				duration, _ := strconv.ParseFloat(progressMap["duration"], 64)
+				if duration > 0 {
+					percent := (outTimeMs / duration) * 100
+					// Output progress as JSON
+					progressResponse := Response{
+						Success: true,
+						Message: "progress",
+						Data: map[string]interface{}{
+							"progress": percent,
+						},
+					}
+					output, _ := json.Marshal(progressResponse)
+					fmt.Println(string(output))
+				}
+			}
+			// Reset progress map
+			progressMap = make(map[string]string)
+		} else {
+			// Parse key-value pair
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				progressMap[parts[0]] = parts[1]
+			}
+		}
+	}
+
+	// Wait for command to complete
+	if err := cmd.Wait(); err != nil {
+		// Capture stderr for error information
+		stderr, _ := cmd.StderrPipe()
+		stderrOutput, _ := io.ReadAll(stderr)
+		return fmt.Errorf("ffmpeg error: %w\nOutput: %s", err, string(stderrOutput))
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("error reading ffmpeg output: %w", err)
 	}
 
 	return nil

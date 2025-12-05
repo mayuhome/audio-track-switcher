@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
-import "./App.css";
+import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { open } from '@tauri-apps/plugin-dialog';
+import { listen } from '@tauri-apps/api/event';
+import './App.css';
 
 interface AudioTrack {
   index: number;
@@ -16,12 +17,13 @@ interface VideoInfo {
 }
 
 function App() {
-  const [videoPath, setVideoPath] = useState<string>("");
+  const [videoPath, setVideoPath] = useState<string>('');
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [selectedTrack, setSelectedTrack] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<string>('');
   const [processing, setProcessing] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
 
   async function selectVideoFile() {
     try {
@@ -29,15 +31,15 @@ function App() {
         multiple: false,
         filters: [
           {
-            name: "Video",
-            extensions: ["mp4", "mkv", "avi", "mov", "flv", "wmv", "webm"],
-          },
-        ],
+            name: 'Video',
+            extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'wmv', 'webm']
+          }
+        ]
       });
 
-      if (selected && typeof selected === "string") {
+      if (selected && typeof selected === 'string') {
         setVideoPath(selected);
-        setMessage("");
+        setMessage('');
         await loadAudioTracks(selected);
       }
     } catch (error) {
@@ -45,12 +47,24 @@ function App() {
     }
   }
 
+  useEffect(() => {
+    // Listen for progress updates from Tauri backend
+    const unlisten = listen('progress-update', (event) => {
+      const progress = event.payload as number;
+      setProgress(progress);
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
   async function loadAudioTracks(path: string) {
     setLoading(true);
-    setMessage("");
+    setMessage('');
     try {
-      const info = await invoke<VideoInfo>("get_audio_tracks", {
-        videoPath: path,
+      const info = await invoke<VideoInfo>('get_audio_tracks', {
+        videoPath: path
       });
       setVideoInfo(info);
       if (info.audioTracks.length > 0) {
@@ -67,28 +81,33 @@ function App() {
 
   async function switchAudioTrack() {
     if (!videoPath || !videoInfo) {
-      setMessage("Please select a video file first");
+      setMessage('Please select a video file first');
       return;
     }
 
     setProcessing(true);
-    setMessage("Processing...");
+    setMessage('Processing...');
+    setProgress(0);
 
     try {
-      // Generate output path
+      // Get selected track info
+      const selectedTrackInfo = videoInfo.audioTracks.find((track) => track.index === selectedTrack);
+      const trackLanguage = selectedTrackInfo?.language || 'unknown';
+
+      // Generate output path with track language
       const pathParts = videoPath.split(/[/\\]/);
       const fileName = pathParts[pathParts.length - 1];
-      const fileNameWithoutExt = fileName.substring(0, fileName.lastIndexOf("."));
-      const ext = fileName.substring(fileName.lastIndexOf("."));
+      const fileNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+      const ext = fileName.substring(fileName.lastIndexOf('.'));
       const outputPath = videoPath.replace(
         fileName,
-        `${fileNameWithoutExt}_track${selectedTrack}${ext}`
+        `${fileNameWithoutExt}_track${selectedTrack}_${trackLanguage}${ext}`
       );
 
-      await invoke("switch_audio_track", {
+      await invoke('switch_audio_track', {
         inputPath: videoPath,
         trackIndex: selectedTrack,
-        outputPath: outputPath,
+        outputPath: outputPath
       });
 
       setMessage(`Success! Output saved to: ${outputPath}`);
@@ -96,6 +115,7 @@ function App() {
       setMessage(`Error switching audio track: ${error}`);
     } finally {
       setProcessing(false);
+      setProgress(0);
     }
   }
 
@@ -108,11 +128,7 @@ function App() {
 
       <main>
         <section className="file-section">
-          <button
-            onClick={selectVideoFile}
-            disabled={loading || processing}
-            className="select-button"
-          >
+          <button onClick={selectVideoFile} disabled={loading || processing} className="select-button">
             📁 Select Video File
           </button>
           {videoPath && (
@@ -137,9 +153,7 @@ function App() {
               {videoInfo.audioTracks.map((track) => (
                 <div
                   key={track.index}
-                  className={`track-item ${
-                    selectedTrack === track.index ? "selected" : ""
-                  }`}
+                  className={`track-item ${selectedTrack === track.index ? 'selected' : ''}`}
                   onClick={() => setSelectedTrack(track.index)}
                 >
                   <div className="track-header">
@@ -152,33 +166,30 @@ function App() {
                     <span className="track-index">Track {track.index}</span>
                   </div>
                   <div className="track-details">
-                    {track.language && (
-                      <span className="track-lang">🌐 {track.language}</span>
-                    )}
-                    {track.title && (
-                      <span className="track-title">📝 {track.title}</span>
-                    )}
+                    {track.language && <span className="track-lang">🌐 {track.language}</span>}
+                    {track.title && <span className="track-title">📝 {track.title}</span>}
                     <span className="track-codec">🎧 {track.codec}</span>
                   </div>
                 </div>
               ))}
             </div>
 
-            <button
-              onClick={switchAudioTrack}
-              disabled={processing}
-              className="process-button"
-            >
-              {processing ? "⏳ Processing..." : "✨ Switch Default Track"}
+            <button onClick={switchAudioTrack} disabled={processing} className="process-button">
+              {processing ? '⏳ Processing...' : '✨ Switch Default Track'}
             </button>
           </section>
         )}
 
-        {message && (
-          <div className={`message ${message.includes("Error") ? "error" : "success"}`}>
-            {message}
+        {processing && (
+          <div className="processing-container">
+            <div className="progress-container">
+              <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+              <span className="progress-text">{Math.round(progress)}%</span>
+            </div>
           </div>
         )}
+
+        {message && <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>{message}</div>}
       </main>
 
       <footer>
