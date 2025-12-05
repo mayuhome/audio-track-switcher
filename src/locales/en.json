@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "🎵 Audio Track Switcher",
+    "subtitle": "Switch default audio track in video files",
+    "selectButton": "📁 Select Video File",
+    "selected": "Selected:",
+    "loading": "Loading audio tracks...",
+    "audioTracks": "Audio Tracks ({count})",
+    "track": "Track {index}",
+    "language": "🌐 {language}",
+    "titleLabel": "📝 {title}",
+    "codec": "🎧 {codec}",
+    "switchButton": "✨ Switch Default Track",
+    "processing": "⏳ Processing...",
+    "success": "Success! Output saved to:",
+    "error": "Error",
+    "pleaseSelectFile": "Please select a video file first",
+    "errorSelectingFile": "Error selecting file:",
+    "errorLoadingTracks": "Error loading audio tracks:",
+    "errorSwitchingTrack": "Error switching audio track:",
+    "outputSavedTo": "Output saved to",
+    "footer": "Powered by FFmpeg • Tauri • React • Go"
+  }
+}

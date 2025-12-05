@@ -1,0 +1,24 @@
+{
+  "app": {
+    "title": "🎵 音频音轨切换器",
+    "subtitle": "切换视频文件中的默认音频音轨",
+    "selectButton": "📁 选择视频文件",
+    "selected": "已选择:",
+    "loading": "加载音频音轨中...",
+    "audioTracks": "音频音轨 ({count})",
+    "track": "音轨 {index}",
+    "language": "🌐 {language}",
+    "titleLabel": "📝 {title}",
+    "codec": "🎧 {codec}",
+    "switchButton": "✨ 切换默认音轨",
+    "processing": "⏳ 处理中...",
+    "success": "成功! 输出文件保存到:",
+    "error": "错误",
+    "pleaseSelectFile": "请先选择一个视频文件",
+    "errorSelectingFile": "选择文件时出错:",
+    "errorLoadingTracks": "加载音频音轨时出错:",
+    "errorSwitchingTrack": "切换音频音轨时出错:",
+    "outputSavedTo": "输出文件保存到",
+    "footer": "Powered by FFmpeg • Tauri • React • Go"
+  }
+}

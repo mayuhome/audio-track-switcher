@@ -3,6 +3,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
 import './App.css';
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 
 interface AudioTrack {
   index: number;
@@ -24,6 +26,14 @@ function App() {
   const [message, setMessage] = useState<string>('');
   const [processing, setProcessing] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(0);
+  const [language, setLanguage] = useState<string>('zh');
+  const { t } = useTranslation();
+
+  // Handle language change
+  const handleLanguageChange = (newLanguage: string) => {
+    i18next.changeLanguage(newLanguage);
+    setLanguage(newLanguage);
+  };
 
   async function selectVideoFile() {
     try {
@@ -43,7 +53,7 @@ function App() {
         await loadAudioTracks(selected);
       }
     } catch (error) {
-      setMessage(`Error selecting file: ${error}`);
+      setMessage(`${t('app.error')}: ${t('app.errorSelectingFile')} ${error}`);
     }
   }
 
@@ -70,9 +80,9 @@ function App() {
       if (info.audioTracks.length > 0) {
         setSelectedTrack(info.audioTracks[0].index);
       }
-      setMessage(`Found ${info.audioTracks.length} audio track(s)`);
+      setMessage(t('app.success', { count: info.audioTracks.length }));
     } catch (error) {
-      setMessage(`Error loading audio tracks: ${error}`);
+      setMessage(`${t('app.errorLoadingTracks')} ${error}`);
       setVideoInfo(null);
     } finally {
       setLoading(false);
@@ -81,12 +91,12 @@ function App() {
 
   async function switchAudioTrack() {
     if (!videoPath || !videoInfo) {
-      setMessage('Please select a video file first');
+      setMessage(t('app.pleaseSelectFile'));
       return;
     }
 
     setProcessing(true);
-    setMessage('Processing...');
+    setMessage(t('app.processing'));
     setProgress(0);
 
     try {
@@ -110,9 +120,9 @@ function App() {
         outputPath: outputPath
       });
 
-      setMessage(`Success! Output saved to: ${outputPath}`);
+      setMessage(`${t('app.success')} ${t('app.outputSavedTo')}: ${outputPath}`);
     } catch (error) {
-      setMessage(`Error switching audio track: ${error}`);
+      setMessage(`${t('app.error')}: ${t('app.errorSwitchingTrack')} ${error}`);
     } finally {
       setProcessing(false);
       setProgress(0);
@@ -122,18 +132,36 @@ function App() {
   return (
     <div className="container">
       <header>
-        <h1>🎵 Audio Track Switcher</h1>
-        <p className="subtitle">Switch default audio track in video files</p>
+        <div className="header-content">
+          <div>
+            <h1>{t('app.title')}</h1>
+            <p className="subtitle">{t('app.subtitle')}</p>
+          </div>
+          <div className="language-switcher">
+            <button
+              className={`language-button ${language === 'zh' ? 'active' : ''}`}
+              onClick={() => handleLanguageChange('zh')}
+            >
+              中文
+            </button>
+            <button
+              className={`language-button ${language === 'en' ? 'active' : ''}`}
+              onClick={() => handleLanguageChange('en')}
+            >
+              English
+            </button>
+          </div>
+        </div>
       </header>
 
       <main>
         <section className="file-section">
           <button onClick={selectVideoFile} disabled={loading || processing} className="select-button">
-            📁 Select Video File
+            {t('app.selectButton')}
           </button>
           {videoPath && (
             <div className="file-info">
-              <span className="label">Selected:</span>
+              <span className="label">{t('app.selected')}</span>
               <span className="path">{videoPath}</span>
             </div>
           )}
@@ -142,13 +170,13 @@ function App() {
         {loading && (
           <div className="loading">
             <div className="spinner"></div>
-            <p>Loading audio tracks...</p>
+            <p>{t('app.loading')}</p>
           </div>
         )}
 
         {videoInfo && !loading && (
           <section className="tracks-section">
-            <h2>Audio Tracks ({videoInfo.audioTracks.length})</h2>
+            <h2>{t('app.audioTracks', { count: videoInfo.audioTracks.length })}</h2>
             <div className="tracks-list">
               {videoInfo.audioTracks.map((track) => (
                 <div
@@ -163,19 +191,21 @@ function App() {
                       checked={selectedTrack === track.index}
                       onChange={() => setSelectedTrack(track.index)}
                     />
-                    <span className="track-index">Track {track.index}</span>
+                    <span className="track-index">{t('app.track', { index: track.index })}</span>
                   </div>
                   <div className="track-details">
-                    {track.language && <span className="track-lang">🌐 {track.language}</span>}
-                    {track.title && <span className="track-title">📝 {track.title}</span>}
-                    <span className="track-codec">🎧 {track.codec}</span>
+                    {track.language && (
+                      <span className="track-lang">{t('app.language', { language: track.language })}</span>
+                    )}
+                    {track.title && <span className="track-title">{t('app.titleLabel', { title: track.title })}</span>}
+                    <span className="track-codec">{t('app.codec', { codec: track.codec })}</span>
                   </div>
                 </div>
               ))}
             </div>
 
             <button onClick={switchAudioTrack} disabled={processing} className="process-button">
-              {processing ? '⏳ Processing...' : '✨ Switch Default Track'}
+              {processing ? t('app.processing') : t('app.switchButton')}
             </button>
           </section>
         )}
@@ -193,7 +223,7 @@ function App() {
       </main>
 
       <footer>
-        <p>Powered by FFmpeg • Tauri • React • Go</p>
+        <p>{t('app.footer')}</p>
       </footer>
     </div>
   );
