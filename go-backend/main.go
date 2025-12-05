@@ -82,7 +82,7 @@ func GetAudioTracks(videoPath string) (*VideoInfo, error) {
 }
 
 // SwitchDefaultAudioTrack changes the default audio track of a video file
-func SwitchDefaultAudioTrack(inputPath string, trackIndex int, outputPath string) error {
+func SwitchDefaultAudioTrack(inputPath string, trackIndex int, audioTrackPosition int, outputPath string) error {
 	// Build ffmpeg command to set the default audio track
 	// We'll copy all streams but set the disposition of the selected audio track as default
 	cmd := exec.Command("ffmpeg",
@@ -90,8 +90,8 @@ func SwitchDefaultAudioTrack(inputPath string, trackIndex int, outputPath string
 		"-map", "0",
 		"-c", "copy",
 		"-disposition:a", "0", // Remove default flag from all audio tracks
-		fmt.Sprintf("-disposition:a:%d", trackIndex), "default", // Set selected track as default
-		"-y", // Overwrite output file
+		fmt.Sprintf("-disposition:a:%d", audioTrackPosition), "default", // Set selected track as default using relative audio index
+		"-y",                  // Overwrite output file
 		"-progress", "pipe:1", // Output progress to stdout
 		outputPath,
 	)
@@ -174,13 +174,13 @@ func main() {
 			return
 		}
 		videoPath := os.Args[2]
-		
+
 		info, err := GetAudioTracks(videoPath)
 		if err != nil {
 			printError(err.Error())
 			return
 		}
-		
+
 		printSuccess("Audio tracks retrieved successfully", info)
 
 	case "switch-track":
@@ -188,7 +188,7 @@ func main() {
 			printError("Usage: switch-track <input_path> <track_index> <output_path>")
 			return
 		}
-		
+
 		inputPath := os.Args[2]
 		trackIndex := 0
 		fmt.Sscanf(os.Args[3], "%d", &trackIndex)
@@ -201,12 +201,33 @@ func main() {
 			return
 		}
 
-		err := SwitchDefaultAudioTrack(inputPath, trackIndex, outputPath)
+		// Get audio tracks to find the relative position
+		videoInfo, err := GetAudioTracks(inputPath)
+		if err != nil {
+			printError(fmt.Sprintf("Failed to get audio tracks: %v", err))
+			return
+		}
+
+		// Find the relative position of the selected track in the audio streams
+		audioTrackPosition := -1
+		for i, track := range videoInfo.AudioTracks {
+			if track.Index == trackIndex {
+				audioTrackPosition = i
+				break
+			}
+		}
+
+		if audioTrackPosition == -1 {
+			printError(fmt.Sprintf("Track index %d not found in audio tracks", trackIndex))
+			return
+		}
+
+		err = SwitchDefaultAudioTrack(inputPath, trackIndex, audioTrackPosition, outputPath)
 		if err != nil {
 			printError(err.Error())
 			return
 		}
-		
+
 		printSuccess("Audio track switched successfully", map[string]interface{}{
 			"outputPath": outputPath,
 		})
