@@ -129,6 +129,56 @@ function App() {
     }
   }
 
+  async function removeAudioTrack() {
+    if (!videoPath || !videoInfo) {
+      setMessage(t('app.pleaseSelectFile'));
+      return;
+    }
+
+    if (videoInfo.audioTracks.length <= 1) {
+      setMessage(t('app.cannotRemoveOnlyTrack'));
+      return;
+    }
+
+    // Confirm removal
+    if (!window.confirm(t('app.removeConfirm'))) {
+      return;
+    }
+
+    setProcessing(true);
+    setMessage(t('app.processing'));
+    setProgress(0);
+
+    try {
+      // Get selected track info
+      const selectedTrackInfo = videoInfo.audioTracks.find((track) => track.index === selectedTrack);
+      const trackLanguage = selectedTrackInfo?.language || 'unknown';
+
+      // Generate output path with track language
+      const pathParts = videoPath.split(/[/\\]/);
+      const fileName = pathParts[pathParts.length - 1];
+      const fileNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+      const ext = fileName.substring(fileName.lastIndexOf('.'));
+      const outputPath = videoPath.replace(
+        fileName,
+        `${fileNameWithoutExt}_removed_track${selectedTrack}_${trackLanguage}${ext}`
+      );
+
+      await invoke('remove_audio_track', {
+        inputPath: videoPath,
+        trackIndex: selectedTrack,
+        outputPath: outputPath
+      });
+
+      setMessage(`${t('app.success')} ${t('app.outputSavedTo')}: ${outputPath}`);
+    } catch (error) {
+      setMessage(`${t('app.error')}: ${t('app.errorRemovingTrack')} ${error}`);
+    } finally {
+      setProcessing(false);
+      setProgress(0);
+    }
+  }
+
   return (
     <div className="container">
       <header>
@@ -204,9 +254,18 @@ function App() {
               ))}
             </div>
 
-            <button onClick={switchAudioTrack} disabled={processing} className="process-button">
-              {processing ? t('app.processing') : t('app.switchButton')}
-            </button>
+            <div className="button-group">
+              <button onClick={switchAudioTrack} disabled={processing} className="process-button">
+                {processing ? t('app.processing') : t('app.switchButton')}
+              </button>
+              <button
+                onClick={removeAudioTrack}
+                disabled={processing || videoInfo.audioTracks.length <= 1}
+                className="remove-button"
+              >
+                {processing ? t('app.processing') : t('app.removeButton')}
+              </button>
+            </div>
           </section>
         )}
 

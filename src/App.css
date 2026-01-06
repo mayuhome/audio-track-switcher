@@ -2,17 +2,17 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 
-  --primary-color: #6366f1;
-  --primary-hover: #4f46e5;
-  --secondary-color: #8b5cf6;
-  --background: #0f172a;
-  --surface: #1e293b;
-  --surface-hover: #334155;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border: #334155;
-  --success: #10b981;
-  --error: #ef4444;
+  --primary-color: #5b7cfa;
+  --primary-hover: #4a63d4;
+  --secondary-color: #6c757d;
+  --background: #0a0e17;
+  --surface: #1a1f2e;
+  --surface-hover: #2a3042;
+  --text-primary: #e8eaed;
+  --text-secondary: #a8acb3;
+  --border: #2a3042;
+  --success: #4caf50;
+  --error: #f44336;
   --shadow: rgba(0, 0, 0, 0.3);
 }
 
@@ -42,7 +42,7 @@ body {
 header {
   margin-bottom: 3rem;
   padding: 2rem;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   border-radius: 16px;
   box-shadow: 0 8px 32px var(--shadow);
 }
@@ -74,7 +74,7 @@ header {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -130,17 +130,17 @@ main {
   font-size: 1.1rem;
   font-weight: 600;
   color: white;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(91, 124, 250, 0.3);
 }
 
 .select-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 20px rgba(91, 124, 250, 0.4);
 }
 
 .select-button:disabled {
@@ -233,10 +233,10 @@ main {
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-hover));
   transition: width 0.3s ease;
   border-radius: 13px;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 10px rgba(91, 124, 250, 0.5);
 }
 
 .progress-text {
@@ -273,23 +273,25 @@ main {
 
 .track-item {
   padding: 1.25rem;
-  background: var(--background);
-  border: 2px solid var(--border);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .track-item:hover {
   background: var(--surface-hover);
   border-color: var(--primary-color);
-  transform: translateX(4px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .track-item.selected {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+  background: var(--surface-hover);
   border-color: var(--primary-color);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 20px rgba(91, 124, 250, 0.2);
 }
 
 .track-header {
@@ -328,6 +330,15 @@ main {
   font-size: 0.9rem;
   color: var(--text-secondary);
   border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.track-lang:hover,
+.track-title:hover,
+.track-codec:hover {
+  background: var(--surface-hover);
+  border-color: var(--primary-color);
+  color: var(--text-primary);
 }
 
 .process-button {
@@ -336,22 +347,66 @@ main {
   font-size: 1.2rem;
   font-weight: 700;
   color: white;
-  background: linear-gradient(135deg, var(--success), #059669);
+  background: linear-gradient(135deg, var(--success), #388e3c);
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 .process-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
 }
 
 .process-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.button-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .button-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+.remove-button {
+  width: 100%;
+  padding: 1.25rem 2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--error), #d32f2f);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.remove-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+  background: linear-gradient(135deg, #e53935, #d32f2f);
+}
+
+.remove-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--secondary-color);
+  box-shadow: none;
 }
 
 .message {

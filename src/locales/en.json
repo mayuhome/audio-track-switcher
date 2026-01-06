@@ -11,6 +11,8 @@
     "titleLabel": "📝 {{title}}",
     "codec": "🎧 {{codec}}",
     "switchButton": "✨ Switch Default Track",
+    "removeButton": "🗑️ Remove Track",
+    "removeConfirm": "Are you sure you want to remove the selected track?",
     "processing": "⏳ Processing...",
     "success": "Success! Output saved to:",
     "error": "Error",
@@ -18,6 +20,8 @@
     "errorSelectingFile": "Error selecting file:",
     "errorLoadingTracks": "Error loading audio tracks:",
     "errorSwitchingTrack": "Error switching audio track:",
+    "errorRemovingTrack": "Error removing audio track:",
+    "cannotRemoveOnlyTrack": "Cannot remove the only audio track",
     "outputSavedTo": "Output saved to",
     "footer": "Powered by FFmpeg • Tauri • React • Go"
   }

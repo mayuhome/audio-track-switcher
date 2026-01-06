@@ -11,6 +11,8 @@
     "titleLabel": "📝 {{title}}",
     "codec": "🎧 {{codec}}",
     "switchButton": "✨ 切换默认音轨",
+    "removeButton": "🗑️ 删除音轨",
+    "removeConfirm": "确定要删除选中的音轨吗？",
     "processing": "⏳ 处理中...",
     "success": "成功! 输出文件保存到:",
     "error": "错误",
@@ -18,6 +20,8 @@
     "errorSelectingFile": "选择文件时出错:",
     "errorLoadingTracks": "加载音频音轨时出错:",
     "errorSwitchingTrack": "切换音频音轨时出错:",
+    "errorRemovingTrack": "删除音频音轨时出错:",
+    "cannotRemoveOnlyTrack": "不能删除唯一的音频音轨",
     "outputSavedTo": "输出文件保存到",
     "footer": "Powered by FFmpeg • Tauri • React • Go"
   }
